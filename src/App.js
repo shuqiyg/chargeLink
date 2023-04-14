@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   GoogleMap,
   useLoadScript,
   Marker,
+  MarkerProps,
   InfoWindow,
 } from "@react-google-maps/api";
 
+import {MarkerClusterer} from "@googlemaps/markerclusterer";
+import { GoogleMapProvider } from "@ubilabs/google-maps-react-hooks";
 import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
@@ -24,6 +27,27 @@ import { formatRelative } from "date-fns";
 import "@reach/combobox/styles.css";
 import style from "./mapStyles";
 
+
+let stations = [{"latitude":51.288119,"longitude":-113.998284 }]
+   //fetch ev station locations 
+   async function getData(){await fetch('https://developer.nrel.gov/api/alt-fuel-stations/v1.json?limit=200&country=CA&api_key=g9rXxUWo1cZgDbh8dULtJx8tChvw6RctLcL2gEUO')
+   .then(response => response.json())
+   .then(data => {
+     // Handle the data
+     return data.fuel_stations
+   }).then(data => {
+    //  setEvLocations(data)
+    stations = data
+     console.log(data);
+   })
+   .catch(error => {
+     // Handle any errors
+     console.error(error);
+   });
+}
+getData()
+
+
 const libraries = ["places"]
 const mapContainerStyle = {
   width: "100vw",
@@ -41,13 +65,19 @@ const options = {
 
 
 function App() {
+  
   const {isLoaded, loadError} = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: "AIzaSyC8DbQEyK9-Inideay8TVNZw0YV1Izo37g",
     libraries
   });
   const [markers, setMarkers] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
+  const [evLocations, setEvLocations] = React.useState([]);
 
+  useEffect(() => {
+ 
+  },[])
+  
   const onMapClick = React.useCallback((event)=> {
             setMarkers((current) => [...current, {
               lat: event.latLng.lat(),
@@ -60,6 +90,8 @@ function App() {
 
   const onMapLoad = React.useCallback((map)=> {
     mapRef.current = map;
+    console.log(evLocations)
+    addMarkers(mapRef.current, stations)
   },[])
 
   const panTo = React.useCallback(({lat, lng}) => {
@@ -121,6 +153,18 @@ function App() {
 
 export default App;
 
+function addMarkers(map,evLocations){
+  const markers = evLocations.map((loc)=>{
+    const marker = new window.google.maps.Marker({position: {lat:loc.latitude, lng:loc.longitude}})
+
+    return marker
+  })
+  new MarkerClusterer({
+    markers,
+    map,
+    // algorithm: new SuperClusterAlgorithm({})
+  })
+}
 function Locate({panTo}) {
     return <button className="locate" onClick={() => {
       navigator.geolocation.getCurrentPosition((position)=> {
