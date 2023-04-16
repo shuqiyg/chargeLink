@@ -22,3 +22,22 @@
     ></script>
   </body>
 </html>
+
+<div class="stationInfoWindow">
+    <h4>${loc.station_name}</h4>
+    <div className="popup-address">
+        ${loc.street_address}
+        <br>
+        ${loc.zip}
+    </div>
+    <div>
+        ${loc.id}
+    </div>
+    <div>
+        ${connTypes}
+    </div>
+    <div>
+        ${loc.station_phone}
+    </div>
+    <div>DC Fast Charge: ${loc.ev_dc_fast_num == null? "" : loc.ev_dc_fast_num}</div>
+</div>

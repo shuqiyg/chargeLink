@@ -27,7 +27,7 @@ import "@reach/combobox/styles.css";
 import style from "./mapStyles";
 
 console.log(process.env.ff)
-let key = "g9rXxUWo1cZgDbh8dULtJx8tChvw6RctLcL2gEUO"
+// let key = "g9rXxUWo1cZgDbh8dULtJx8tChvw6RctLcL2gEUO"
 let stations = []
 
 async function exampleFetch() {
@@ -109,7 +109,7 @@ function App() {
         center={center} 
         options={options}
         //pinpoint bear
-        onClick={onMapClick}
+        // onClick={onMapClick}
         onLoad = {onMapLoad} 
         tilt={5}
       >
@@ -126,7 +126,7 @@ function App() {
                 }} 
               onClick={()=> {
                 setSelected(marker);
-                mapRef.current.setTilt(300)
+                mapRef.current.setTilt(500)
                 mapRef.current.setZoom(28)
                 mapRef.current.heading(20)
               }}  
@@ -158,9 +158,27 @@ function addMarkers(map,evLocations){
       
     })
     marker.addListener("click", ()=>{
+      const connTypes = loc.ev_connector_types.map((type)=>{
+        return `<div>${type}</div>`
+      })
       stationInfoWindow.setContent(`
         <div class="stationInfoWindow">
-          <h2>${loc.station_name}</h2>
+            <h4>${loc.station_name}</h4>
+            <div className="popup-address">
+                ${loc.street_address}
+                <br>
+                ${loc.zip}
+            </div>
+            <div>
+                ${loc.id}
+            </div>
+            <div>
+                ${connTypes}
+            </div>
+            <div>
+                ${loc.station_phone}
+            </div>
+            <div>DC Fast Charge: ${loc.ev_dc_fast_num == null? "" : loc.ev_dc_fast_num}</div>
         </div>
       `)
       map.setTilt(250)
