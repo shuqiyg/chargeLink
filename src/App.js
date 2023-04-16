@@ -6,8 +6,8 @@ import {
   MarkerProps,
   InfoWindow,
 } from "@react-google-maps/api";
-
-import {MarkerClusterer} from "@googlemaps/markerclusterer";
+import { Wrapper } from "@googlemaps/react-wrapper"
+import {MarkerClusterer, SuperClusterAlgorithm} from "@googlemaps/markerclusterer";
 import { GoogleMapProvider } from "@ubilabs/google-maps-react-hooks";
 import usePlacesAutocomplete, {
   getGeocode,
@@ -23,31 +23,20 @@ import {
 } from "@reach/combobox";
 
 import { formatRelative } from "date-fns";
-
 import "@reach/combobox/styles.css";
 import style from "./mapStyles";
 
+console.log(process.env.ff)
+let key = "g9rXxUWo1cZgDbh8dULtJx8tChvw6RctLcL2gEUO"
+let stations = []
 
-let stations = [{"latitude":51.288119,"longitude":-113.998284 }]
-   //fetch ev station locations 
-   async function getData(){await fetch('https://developer.nrel.gov/api/alt-fuel-stations/v1.json?limit=200&country=CA&api_key=g9rXxUWo1cZgDbh8dULtJx8tChvw6RctLcL2gEUO')
-   .then(response => response.json())
-   .then(data => {
-     // Handle the data
-     return data.fuel_stations
-   }).then(data => {
-    //  setEvLocations(data)
-    stations = data
-     console.log(data);
-   })
-   .catch(error => {
-     // Handle any errors
-     console.error(error);
-   });
+async function exampleFetch() {
+  const response = await fetch(`https://developer.nrel.gov/api/alt-fuel-stations/v1.json?limit=200&country=CA&api_key=${key}`);
+  const json = await response.json();
+  stations = await json.fuel_stations
+  console.log(stations);
 }
-getData()
-
-
+// exampleFetch()
 const libraries = ["places"]
 const mapContainerStyle = {
   width: "100vw",
@@ -58,16 +47,17 @@ const center = {
   lng: -79.383186,
 }
 const options = {
+  mapId: "e098d5ebe958ec47",
   styles: style,
   disableDefaultUI : true,
   zoomControl: true,
+  heading: 15,
+  tilt: 300,
 }
 
-
 function App() {
-  
   const {isLoaded, loadError} = useLoadScript({
-    googleMapsApiKey: "AIzaSyC8DbQEyK9-Inideay8TVNZw0YV1Izo37g",
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries
   });
   const [markers, setMarkers] = React.useState([]);
@@ -75,7 +65,8 @@ function App() {
   const [evLocations, setEvLocations] = React.useState([]);
 
   useEffect(() => {
- 
+    exampleFetch()
+    setEvLocations(stations)
   },[])
   
   const onMapClick = React.useCallback((event)=> {
@@ -110,16 +101,15 @@ function App() {
 
       <Locate panTo={panTo}/>
       <Search panTo={panTo}/>
-
-
+      <Wrapper id="e098d5ebe958ec47">
       <GoogleMap 
-        id="map"
+        id="e098d5ebe958ec47"
         mapContainerStyle={mapContainerStyle}
         zoom={8} 
         center={center} 
         options={options}
         onClick={onMapClick}
-        onLoad = {onMapLoad}  
+        onLoad = {onMapLoad} 
       >
 
         {markers.map(marker => (
@@ -147,6 +137,7 @@ function App() {
             </div>
          </InfoWindow>) : null} 
        </GoogleMap>
+       </Wrapper>
     </div>
   );
 }
@@ -154,17 +145,33 @@ function App() {
 export default App;
 
 function addMarkers(map,evLocations){
-  const markers = evLocations.map((loc)=>{
-    const marker = new window.google.maps.Marker({position: {lat:loc.latitude, lng:loc.longitude}})
+  const stationInfoWindow = new window.google.maps.InfoWindow();
 
+  const markers = evLocations.map((loc)=>{
+    const marker = new window.google.maps.Marker({
+      position: {lat:loc.latitude, lng:loc.longitude},
+      icon: {url:"/evStation.png", scaledSize:new window.google.maps.Size(40, 40)}
+    })
+    marker.addListener("click", ()=>{
+      stationInfoWindow.setContent(`
+        <div class="stationInfoWindow">
+          <h2>${loc.station_name}</h2>
+        </div>
+      `)
+      stationInfoWindow.open({
+        map,
+        anchor: marker
+      });
+    })
     return marker
   })
   new MarkerClusterer({
     markers,
     map,
-    // algorithm: new SuperClusterAlgorithm({})
+    algorithm: new SuperClusterAlgorithm({ radius: 350 })
   })
 }
+
 function Locate({panTo}) {
     return <button className="locate" onClick={() => {
       navigator.geolocation.getCurrentPosition((position)=> {
