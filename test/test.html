@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <title>Tilt and Rotation</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
+    <link rel="stylesheet" type="text/css" href="./test.css" />
+    <script type="module" src="./test.js"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <!-- 
+      The `defer` attribute causes the callback to execute after the full HTML
+      document has been parsed. For non-blocking uses, avoiding race conditions,
+      and consistent behavior across browsers, consider loading using Promises.
+      See https://developers.google.com/maps/documentation/javascript/load-maps-js-api
+      for more information.
+      -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC8DbQEyK9-Inideay8TVNZw0YV1Izo37g&callback=initMap&v=beta"
+      defer
+    ></script>
+  </body>
+</html>
+
+<div class="stationInfoWindow">
+    <h4>${loc.station_name}</h4>
+    <div className="popup-address">
+        ${loc.street_address}
+        <br>
+        ${loc.zip}
+    </div>
+    <div>
+        ${loc.id}
+    </div>
+    <div>
+        Connector: ${connTypes}
+    </div>
+    <div>
+        ${loc.station_phone}
+    </div>
+    <div>DC Fast Charge: ${loc.ev_dc_fast_num == null? 0 : loc.ev_dc_fast_num}</div>
+    <div>Level 2: ${loc.ev_level2_evse_num == null? 0 : loc.ev_level2_evse_num}</div>
+    <div>Level 1: ${loc.ev_level1_evse_num == null? 0 : loc.ev_level1_evse_num}</div>
+    <div>Charging Network: ${loc.ev_network}</div>
+</div>

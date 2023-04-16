@@ -26,17 +26,22 @@ import { formatRelative } from "date-fns";
 import "@reach/combobox/styles.css";
 import style from "./mapStyles";
 
-console.log(process.env.ff)
-// let key = "g9rXxUWo1cZgDbh8dULtJx8tChvw6RctLcL2gEUO"
 let stations = []
+//  fetch("/allStations.json")
+//       .then(res=>res.json())
+//       .then(json=>{
+//         stations = json;
+//         console.log(json)
+//       })
 
-async function exampleFetch() {
-  const response = await fetch(`https://developer.nrel.gov/api/alt-fuel-stations/v1.json?limit=200&country=CA&api_key=${key}`);
+async function stationsFetch(setLocations) {
+  const response = await fetch(`https://developer.nrel.gov/api/alt-fuel-stations/v1.json?limit=200&country=CA&fuel_type=ELEC&api_key=${process.env.REACT_APP_NREL_API_KEY}`);
   const json = await response.json();
   stations = await json.fuel_stations
+  setLocations(stations)
   console.log(stations);
 }
-// exampleFetch()
+// stationsFetch()
 const libraries = ["places"]
 const mapContainerStyle = {
   width: "100vw",
@@ -51,7 +56,7 @@ const options = {
   styles: style,
   disableDefaultUI : true,
   zoomControl: true,
-  heading: 5,
+  // heading: 5,
   // tilt: 20,
 }
 
@@ -65,11 +70,20 @@ function App() {
   const [evLocations, setEvLocations] = React.useState([]);
   // const [tilt, setTilt] = React.useState(5);
 
+
   useEffect(() => {
-    exampleFetch()
+     fetch("/allStations.json")
+      .then(res=>res.json())
+      .then(json=>{
+        setEvLocations(json);
+        stations = json
+        console.log(json)
+      })
+    // stationsFetch(setEvLocations)
     setEvLocations(stations)
   },[])
   
+  //pin on the map
   const onMapClick = React.useCallback((event)=> {
             setMarkers((current) => [...current, {
               lat: event.latLng.lat(),
@@ -88,7 +102,8 @@ function App() {
 
   const panTo = React.useCallback(({lat, lng}) => {
     mapRef.current.panTo({lat, lng});
-    mapRef.current.setZoom(12)
+    mapRef.current.setZoom(14)
+    // mapRef.current.Marker({position:{lat,lng}})
   },[])
 
   if(loadError) return "Error loading maps";
@@ -122,7 +137,7 @@ function App() {
                 url: "/charging-station1.svg",
                 scaledSize: new window.google.maps.Size(25,25),
                 origin: new window.google.maps.Point(0,0),
-                anchor: new window.google.maps.Point(10,10),
+                anchor: new window.google.maps.Point(12,12),
                 }} 
               onClick={()=> {
                 setSelected(marker);
@@ -173,16 +188,19 @@ function addMarkers(map,evLocations){
                 ${loc.id}
             </div>
             <div>
-                ${connTypes}
+                Connector: ${connTypes}
             </div>
             <div>
                 ${loc.station_phone}
             </div>
-            <div>DC Fast Charge: ${loc.ev_dc_fast_num == null? "" : loc.ev_dc_fast_num}</div>
+            <div>DC Fast Charge: ${loc.ev_dc_fast_num == null? 0 : loc.ev_dc_fast_num}</div>
+            <div>Level 2: ${loc.ev_level2_evse_num == null? 0 : loc.ev_level2_evse_num}</div>
+            <div>Level 1: ${loc.ev_level1_evse_num == null? 0 : loc.ev_level1_evse_num}</div>
+            <div>Charging Network: ${loc.ev_network}</div>
         </div>
       `)
       map.setTilt(250)
-      map.setZoom(14)
+      map.setZoom(16)
       stationInfoWindow.open({
         map,
         anchor: marker
@@ -193,7 +211,7 @@ function addMarkers(map,evLocations){
   new MarkerClusterer({
     markers,
     map,
-    algorithm: new SuperClusterAlgorithm({ radius: 350 })
+    algorithm: new SuperClusterAlgorithm({ radius: 250 })
   })
 }
 
