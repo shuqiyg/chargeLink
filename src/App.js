@@ -51,8 +51,8 @@ const options = {
   styles: style,
   disableDefaultUI : true,
   zoomControl: true,
-  heading: 15,
-  tilt: 300,
+  heading: 5,
+  // tilt: 20,
 }
 
 function App() {
@@ -63,6 +63,7 @@ function App() {
   const [markers, setMarkers] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
   const [evLocations, setEvLocations] = React.useState([]);
+  // const [tilt, setTilt] = React.useState(5);
 
   useEffect(() => {
     exampleFetch()
@@ -87,7 +88,7 @@ function App() {
 
   const panTo = React.useCallback(({lat, lng}) => {
     mapRef.current.panTo({lat, lng});
-    mapRef.current.setZoom(14)
+    mapRef.current.setZoom(12)
   },[])
 
   if(loadError) return "Error loading maps";
@@ -101,31 +102,35 @@ function App() {
 
       <Locate panTo={panTo}/>
       <Search panTo={panTo}/>
-      <Wrapper id="e098d5ebe958ec47">
       <GoogleMap 
-        id="e098d5ebe958ec47"
+        // id="e098d5ebe958ec47"
         mapContainerStyle={mapContainerStyle}
         zoom={8} 
         center={center} 
         options={options}
+        //pinpoint bear
         onClick={onMapClick}
         onLoad = {onMapLoad} 
+        tilt={5}
       >
 
         {markers.map(marker => (
-        <Marker 
-          key={`${marker.lat}-${marker.lng}`} 
-          position={{ lat: marker.lat, lng: marker.lng }}
-          icon={{
-            url: "/charging-station1.svg",
-            scaledSize: new window.google.maps.Size(25,25),
-            origin: new window.google.maps.Point(0,0),
-            anchor: new window.google.maps.Point(10,10),
-            }} 
-          onClick={()=> {
-            setSelected(marker);
-          }}  
-        />
+            <Marker 
+              key={`${marker.lat}-${marker.lng}`} 
+              position={{ lat: marker.lat, lng: marker.lng }}
+              icon={{
+                url: "/charging-station1.svg",
+                scaledSize: new window.google.maps.Size(25,25),
+                origin: new window.google.maps.Point(0,0),
+                anchor: new window.google.maps.Point(10,10),
+                }} 
+              onClick={()=> {
+                setSelected(marker);
+                mapRef.current.setTilt(300)
+                mapRef.current.setZoom(28)
+                mapRef.current.heading(20)
+              }}  
+            />
         ))}
 
          {selected ? (<InfoWindow position={{lat:selected.lat, lng:selected.lng}} onCloseClick={()=> {
@@ -137,7 +142,6 @@ function App() {
             </div>
          </InfoWindow>) : null} 
        </GoogleMap>
-       </Wrapper>
     </div>
   );
 }
@@ -151,6 +155,7 @@ function addMarkers(map,evLocations){
     const marker = new window.google.maps.Marker({
       position: {lat:loc.latitude, lng:loc.longitude},
       icon: {url:"/evStation.png", scaledSize:new window.google.maps.Size(40, 40)}
+      
     })
     marker.addListener("click", ()=>{
       stationInfoWindow.setContent(`
@@ -158,6 +163,8 @@ function addMarkers(map,evLocations){
           <h2>${loc.station_name}</h2>
         </div>
       `)
+      map.setTilt(250)
+      map.setZoom(14)
       stationInfoWindow.open({
         map,
         anchor: marker
